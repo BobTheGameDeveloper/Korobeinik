@@ -8,6 +8,7 @@ function CreatePlayer(world,x,y)
     player.x = 100
     player.y = 300
     player.korobeinik = peachy.new("assets/korobein.json", love.graphics.newImage("assets/korobein.png"), "def1")
+    player.die = love.graphics.newImage("assets/die.png")
     player.body = love.physics.newBody(world, player.x,  player.y, "dynamic")
     player.shape = love.physics.newRectangleShape(42, 69)
     player.fixture = love.physics.newFixture(player.body, player.shape, 1)
@@ -31,8 +32,6 @@ end
 
 direction = "right"
 
-
-
 function UpdatePlayer(player,dt)
     function love.wheelmoved(x,y)
         if y > 0 then
@@ -50,22 +49,25 @@ function UpdatePlayer(player,dt)
    if love.keyboard.isDown("d") and player.collisionnormal.x ~= 1 then 
         player.body:setLinearVelocity(700, playervelocity.y)
         direction = "right"
+        
         if player.onground then
             love.audio.play(player.step)
-        end 
+        end
+
         if player.mode then 
             player.korobeinik:update(dt)
             player.korobeinik:setTag("step2")
             
         end
+
         if not player.mode then
             player.korobeinik:update(dt)
             player.korobeinik:setTag("step1")
         end
     
     elseif love.keyboard.isDown("a") and player.collisionnormal.x ~= -1  then
-       player.body:setLinearVelocity(-700, playervelocity.y)
-       direction = "left"
+        player.body:setLinearVelocity(-700, playervelocity.y)
+        direction = "left"
 
         if player.onground then
             love.audio.play(player.step)
@@ -138,6 +140,7 @@ function UpdatePlayer(player,dt)
         end
     end  
 
+
   
    local velocity = vector2.new(player.body:getLinearVelocity())
     if velocity.x > 0 then
@@ -206,7 +209,7 @@ function UpdatePlayer(player,dt)
     if love.keyboard.isDown("escape") then 
         love.event.quit(0)
     end
-end 
+end
 
 function BeginContactPlayer(fixtureA,fixtureB,contact,player)
     if (fixtureA:getUserData().tag == "player" and 
@@ -319,6 +322,18 @@ function BeginContactPlayer(fixtureA,fixtureB,contact,player)
     end
 
     if (fixtureA:getUserData().tag == "player" and 
+    fixtureB:getUserData().tag == "ammo") or 
+    (fixtureA:getUserData().tag == "ammo" and 
+    fixtureB:getUserData().tag == "player") then
+     local normal = vector2.new(contact:getNormal())
+     if normal.y == 1 then
+         if bcounter <15 then 
+            bcounter = bcounter +  15 - bcounter
+         end
+     end
+    end
+
+    if (fixtureA:getUserData().tag == "player" and 
     fixtureB:getUserData().tag == "enemy") or 
     (fixtureA:getUserData().tag == "enemy" and 
     fixtureB:getUserData().tag == "player") then
@@ -335,24 +350,34 @@ end
 
 
 function DrawPlayer(player)
-    if direction == "right" then 
+    if direction == "right" and h > 0  then 
         bodyX =player.body:getX()-50
         skaleX = 2 
     end
 
-    if direction == "left" then 
+    if direction == "left"  and h > 0 then 
         bodyX = player.body:getX()+50
         skaleX = -2
+        if h <=0 then 
+            skaleX = 2
+        end 
     end
 
-    player.korobeinik:draw(bodyX, player.body:getY()-65,0,skaleX, 2)
-    --love.graphics.setColor(1, 1, 1,0)
-    if player.body:getY()>550 then 
-        love.graphics.setColor(1,0,0,0.3)
+    if h == 0 then 
+        player.korobeinik:setTag("die")
+    end
+
+    if h > 0 then 
+        player.korobeinik:draw(bodyX, player.body:getY()-65,0,skaleX, 2)
     end 
+
+    if h <= 0 then
+        player.korobeinik:draw(bodyX, player.body:getY()-15,0,skaleX, 2)
+    end 
+    --love.graphics.setColor(1, 1, 1,0)
+
    -- love.graphics.polygon("fill", player.body:getWorldPoints(player.shape:getPoints()))
 end
-
 
 function DrawScreenDeath(player)
     if h == 0 then 
