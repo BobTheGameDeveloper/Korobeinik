@@ -42,7 +42,64 @@ end]]
 function bulletSpawn(bullets)
    
     table.insert(bullets,{x = bullets.x+46, y = bullets.y+29 ,bulletSpeed = bullets.Speed })
+    function createbullets()
+    local bullets = {}
+    bullets.bullet = love.graphics.newImage("assets/bullet.png")
+   
+    bullets.bulletSpeed = 2000
+    bullets.bulletShootingRate = 0.9
+    bullets.bulletShootingTime = 0
     
+    return bullets
+end
+
+bcounter = 15 
+
+function createdonuts()
+    local donuts = {}
+    donuts.donut = love.graphics.newImage("assets/donut.png")
+    donuts.donutSpeed = 400
+    donuts.donutShootingRate = 0.35
+    donuts.donutShootingTime = 0
+    return donuts
+end
+
+
+
+function bulletsUpdate(bullets,dt)
+    for i,v in ipairs(bullets) do
+        v.x = v.x + v.bulletSpeed * dt 
+    end
+end
+
+function donutsUpdate(donuts,dt)
+    for i,v in ipairs(donuts) do
+        v.x = v.x + v.donutSpeed * dt 
+    end
+end
+
+function bulletSpawn(bullets,player)
+    table.insert(bullets,{x = player.body:getX()+46, y = player.body:getY()-4 ,bulletSpeed = bullets.bulletSpeed })
+end
+
+function donutSpawn(donuts,player)
+    
+    table.insert(donuts,{x = player.body:getX()+42, y = player.body:getY() ,donutSpeed = donuts.donutSpeed })
+
+end
+
+
+function bulletDraw(bullets)
+    for i,v in ipairs(bullets) do 
+        love.graphics.draw(bullets.bullet,v.x,v.y,0,1,1)
+    end
+end
+
+function donutDraw(donuts)
+    for i,v in ipairs(donuts) do 
+        love.graphics.draw(donuts.donut,v.x,v.y,0,1,1)
+    end
+end
 end
 
 function BulletDraw(bullets)
