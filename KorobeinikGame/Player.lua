@@ -1,12 +1,11 @@
 local peachy = require "lib/peachy"
 require "hood"
-
 --require "weapons"
 
 function CreatePlayer(world,x,y)
     local player = {}
     player.x = 100
-    player.y = 300
+    player.y = 200
     player.korobeinik = peachy.new("assets/korobein.json", love.graphics.newImage("assets/korobein.png"), "def1")
     player.die = love.graphics.newImage("assets/die.png")
     player.body = love.physics.newBody(world, player.x,  player.y, "dynamic")
@@ -27,12 +26,14 @@ function CreatePlayer(world,x,y)
     player.step = love.audio.newSource("MusicAndSounds/step.ogg","static")
     player.vzmach = love.audio.newSource("MusicAndSounds/vzmach.ogg","static")
     player.collisionnormal = vector2.new(0,0)
+    player.completedlevel = false
     return player
 end
 
 direction = "right"
 
 function UpdatePlayer(player,dt)
+
     function love.wheelmoved(x,y)
         if y > 0 then
             player.mode = true
@@ -40,16 +41,16 @@ function UpdatePlayer(player,dt)
         if y < 0 then
             player.mode = false
         end
-    end 
+    end
 
     local playergravity = vector2.new(0,1300)
     player.body:applyForce(playergravity.x, playergravity.y)
     local playervelocity = vector2.new(player.body:getLinearVelocity())
 
-   if love.keyboard.isDown("d") and player.collisionnormal.x ~= 1 then 
+    if love.keyboard.isDown("d") and player.collisionnormal.x ~= 1 then 
         player.body:setLinearVelocity(700, playervelocity.y)
         direction = "right"
-        
+
         if player.onground then
             love.audio.play(player.step)
         end
@@ -57,14 +58,13 @@ function UpdatePlayer(player,dt)
         if player.mode then 
             player.korobeinik:update(dt)
             player.korobeinik:setTag("step2")
-            
         end
 
         if not player.mode then
             player.korobeinik:update(dt)
             player.korobeinik:setTag("step1")
         end
-    
+
     elseif love.keyboard.isDown("a") and player.collisionnormal.x ~= -1  then
         player.body:setLinearVelocity(-700, playervelocity.y)
         direction = "left"
@@ -72,57 +72,28 @@ function UpdatePlayer(player,dt)
         if player.onground then
             love.audio.play(player.step)
         end
-        
+
         if player.mode then
             player.korobeinik:update(dt)
             player.korobeinik:setTag("step2")
         end
-    
+
         if not player.mode then
             player.korobeinik:update(dt)
             player.korobeinik:setTag("step1")
         end
-      
-    else
-        player.body:setLinearVelocity(0, playervelocity.y)
-        
+    else player.body:setLinearVelocity(0, playervelocity.y)
+
         if player.mode then
             player.korobeinik:setTag("def1")
         end
+
         if not player.mode then
             player.korobeinik:setTag("def")
         end
 
     end
 
-    --[[if love.keyboard.isDown("d") and love.keyboard.isDown("space")--[[and player.collisionnormal.x ~= 1  then
-        player.body:setLinearVelocity(500, playervelocity.y)
-        direction = "right"
-
-        --[[if player.onground then 
-            player.body:setLinearVelocity(0, playervelocity.y)
-        end ]]
-         
-        --love.audio.play(player.step)
-       --[[ if love.keyboard.isDown("a") and love.keyboard.isDown("space") then 
-            player.body:setLinearVelocity(0, playervelocity.y)
-        end 
-        
-    
-   
-    elseif love.keyboard.isDown("a") and love.keyboard.isDown("space") --[[and player.collisionnormal.x ~= -1  then
-       player.body:setLinearVelocity(-500, playervelocity.y)
-       direction = "left"
-        --love.audio.play(player.step)
-        --[[if love.keyboard.isDown("b") and love.keyboard.isDown("space") then 
-            player.body:setLinearVelocity(0, playervelocity.y)
-        end ]]
-        --[[if player.onground then 
-            player.body:setLinearVelocity(0, playervelocity.y)
-        end 
-
-    end]]
-    
     if love.keyboard.isDown("space") and player.jumped == false and player.onground == true then
         love.audio.play(player.step)
         jumpForce = vector2.new(0, -3700)
@@ -131,18 +102,17 @@ function UpdatePlayer(player,dt)
         player.onground = false
     end
 
-    if  player.onground == false then
+    if player.onground == false then
         if player.mode then
             player.korobeinik:setTag("jump2")
         end
+
         if not player.mode then
             player.korobeinik:setTag("jump")
         end
-    end  
+    end
 
-
-  
-   local velocity = vector2.new(player.body:getLinearVelocity())
+    local velocity = vector2.new(player.body:getLinearVelocity())
     if velocity.x > 0 then
         player.body:setLinearVelocity(math.min(velocity.x,player.maxvelocity), velocity.y)
     else
@@ -155,48 +125,14 @@ function UpdatePlayer(player,dt)
         player.onground = false
     else
         for i = 1, #contacts, 1 do
-            local normal = vector2.new(contacts[i]:getNormal())
-            --io.write("X: ", normal.x, " Y:", normal.y, " \n")            
+            local normal = vector2.new(contacts[i]:getNormal())           
             if normal.y == 1 then
                 player.onground = true
             end
         end
     end
 
-    --[[local contacts = player.body:getContacts()
-    if #contacts == 0 then
-        player.onground = false
-        if player.mode then
-            player.korobeinik:setTag("jump2")
-        end
-        if not player.mode then
-            player.korobeinik:setTag("jump")
-        end
-    else
-        for i = 1, #contacts, 1 do
-            local normal = vector2.new(contacts[i]:getNormal())
-            --io.write("X: ", normal.x, " Y:", normal.y, " \n")            
-            if normal.y == 1 then
-                player.onground = true
-            end
-        end
-    end
-
-    if player.body:getY() >= 530 then
-		love.audio.setVolume(0.6)
-		love.audio.play(player.scream)
-	end 
-	if player.body:getY() >= 2200 then
-		love.audio.stop(player.scream)
-		love.audio.play(player.upal)
-        h = 0
-	end 
-	if player.body:getY() >= 4300 then
-		love.audio.stop(player.upal)
-	end ]]
-
-    
-    if love.keyboard.isDown("space") and h == 0  then 
+    if love.keyboard.isDown("space") and h == 0  then
         love.event.quit('restart')
         xh = 950
         h = 3 
@@ -212,9 +148,9 @@ function UpdatePlayer(player,dt)
 end
 
 function BeginContactPlayer(fixtureA,fixtureB,contact,player)
-    if (fixtureA:getUserData().tag == "player" and 
-       fixtureB:getUserData().tag == "platform") or 
-       (fixtureA:getUserData().tag == "platform" and 
+    if (fixtureA:getUserData().tag == "player" and
+       fixtureB:getUserData().tag == "platform") or
+       (fixtureA:getUserData().tag == "platform" and
        fixtureB:getUserData().tag == "player") then
         local normal = vector2.new(contact:getNormal())
         if normal.y == 1 then
@@ -222,57 +158,31 @@ function BeginContactPlayer(fixtureA,fixtureB,contact,player)
             if player.mode then
                 player.korobeinik:setTag("def1")
             end
+
             if not player.mode then
                 player.korobeinik:setTag("def")
             end
         end
         player.collisionnormal =  normal
-        --[[if normal.y == 0 then
-           
-            player.onground = false
-            if player.mode then
-                player.korobeinik:setTag("jump2")
-            end
-            if not player.mode then
-                player.korobeinik:setTag("jump")
-            end
-        end]]
     end
 
-
-    if (fixtureA:getUserData().tag == "player" and fixtureB:getUserData().tag == "box") 
+    if (fixtureA:getUserData().tag == "player" and fixtureB:getUserData().tag == "box")
     or (fixtureA:getUserData().tag == "box" and 
     fixtureB:getUserData().tag == "player") then
         local normal = vector2.new(contact:getNormal())
         if normal.y == 1 then
             player.onground = true
-           --[[ if player.mode then
-                player.korobeinik:setTag("def1")
-            end
-            if not player.mode then
-                player.korobeinik:setTag("def")
-            end]]
         end
-        --player.collisionnormal =  normal
     end
 
-
-    
-    if (fixtureA:getUserData().tag == "platform" and 
-    fixtureB:getUserData().tag == "box") or 
-    (fixtureA:getUserData().tag == "platfom" and 
+    if (fixtureA:getUserData().tag == "platform" and
+    fixtureB:getUserData().tag == "box") or
+    (fixtureA:getUserData().tag == "platfom" and
     fixtureB:getUserData().tag == "box") then
         local normal = vector2.new(contact:getNormal())
         if normal.y == 1 then
             player.onground = true
-           --[[ if player.mode then
-                player.korobeinik:setTag("def1")
-            end
-            if not player.mode then
-                player.korobeinik:setTag("def")
-            end]]
         end
-        --player.collisionnormal =  normal
     end
 
 
@@ -280,8 +190,6 @@ function BeginContactPlayer(fixtureA,fixtureB,contact,player)
     and fixtureB:getUserData().tag == "deth1") 
     or (fixtureA:getUserData().tag == "deth1" 
     and fixtureB:getUserData().tag == "player") then
-        --levelcompleted = true
-        --player.body:setLinearVelocity(0, 0)
         love.audio.setVolume(0.6)
         love.audio.play(player.scream)
     end
@@ -290,8 +198,6 @@ function BeginContactPlayer(fixtureA,fixtureB,contact,player)
     fixtureB:getUserData().tag == "deth2") 
     or (fixtureA:getUserData().tag == "deth2" 
     and fixtureB:getUserData().tag == "player") then
-        --levelcompleted = true
-        --player.body:setLinearVelocity(0, 0)
         love.audio.stop(player.scream)
         love.audio.play(player.upal)
         h = 0
@@ -301,8 +207,6 @@ function BeginContactPlayer(fixtureA,fixtureB,contact,player)
     and fixtureB:getUserData().tag == "deth3") 
     or (fixtureA:getUserData().tag == "deth3" 
     and fixtureB:getUserData().tag == "player") then
-        --levelcompleted = true
-        --player.body:setLinearVelocity(0, 0)
         love.audio.stop(player.upal)
     end
 
@@ -318,19 +222,18 @@ function BeginContactPlayer(fixtureA,fixtureB,contact,player)
                 h = h - math.random(0,1)
             end
         end
-
     end
 
     if (fixtureA:getUserData().tag == "player" and 
     fixtureB:getUserData().tag == "ammo") or 
     (fixtureA:getUserData().tag == "ammo" and 
     fixtureB:getUserData().tag == "player") then
-     local normal = vector2.new(contact:getNormal())
-     if normal.y == 1 then
-         if bcounter <15 then 
-            bcounter = bcounter +  15 - bcounter
-         end
-     end
+        local normal = vector2.new(contact:getNormal())
+        if normal.y == 1 then
+            if bcounter <15 then 
+                bcounter = bcounter +  15 - bcounter
+            end
+        end
     end
 
     if (fixtureA:getUserData().tag == "player" and 
@@ -339,8 +242,15 @@ function BeginContactPlayer(fixtureA,fixtureB,contact,player)
     fixtureB:getUserData().tag == "player") then
         h = h-1
     end
-end
 
+    if (fixtureA:getUserData().tag == "player" and 
+    fixtureB:getUserData().tag == "level1end") or 
+    (fixtureA:getUserData().tag == "level1end" and 
+    fixtureB:getUserData().tag == "player") then
+        player.completedlevel = true
+        player.body:setLinearVelocity(0, 0)
+    end
+end
 
 function keyreleasedPlayer(key,player)
     if key == "space" then
@@ -373,10 +283,7 @@ function DrawPlayer(player)
 
     if h <= 0 then
         player.korobeinik:draw(bodyX, player.body:getY()-15,0,skaleX, 2)
-    end 
-    --love.graphics.setColor(1, 1, 1,0)
-
-   -- love.graphics.polygon("fill", player.body:getWorldPoints(player.shape:getPoints()))
+    end
 end
 
 function DrawScreenDeath(player)
