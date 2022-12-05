@@ -4,7 +4,9 @@ function CreateEnemy(world, x, y, t)
     enemy.shape = love.physics.newRectangleShape(30, 30)
     enemy.fixture = love.physics.newFixture(enemy.body, enemy.shape, 1)
     enemy.tag = "enemy"
+    enemy.body:setFixedRotation(true)
     enemy.fixture:setUserData(enemy)
+    enemy.fixture:setGroupIndex(-1)
     enemy.type = t
     enemy.collisionnormal = vector2.new(0, 0)
     enemy.direction = -1
@@ -17,7 +19,6 @@ function UpdateEnemies(enemies, dt)
         if enemies[i].type == 1 then
             --blue enemy
             if enemies[i].collisionnormal.x == 1 or enemies[i].collisionnormal.x == -1 then
-                --enemies[i].direction = enemies[i].collisionnormal.x
                 enemies[i].direction = -enemies[i].direction
                 enemies[i].collisionnormal.x = 0
             end
@@ -30,8 +31,11 @@ function UpdateEnemies(enemies, dt)
 
         end
     end
+end
+
 
     function BeginContactEnemy(fixtureA, fixtureB, contact)
+
         -- Enemy contact with platforms
         if (fixtureA:getUserData().tag == "enemy" and fixtureB:getUserData().tag == "platform") then
             fixtureA:getUserData().collisionnormal = vector2.new(contact:getNormal())
@@ -50,27 +54,25 @@ function UpdateEnemies(enemies, dt)
         elseif (fixtureA:getUserData().tag == "stone" and fixtureB:getUserData().tag == "enemy") then
             fixtureB:getUserData().collisionnormal = vector2.new(contact:getNormal())
 
-            -- Enemy contact with Enemies
-        elseif (fixtureA:getUserData().tag == "enemy" and fixtureB:getUserData().tag == "enemy") then
-            fixtureA:getUserData().collisionnormal = vector2.new(contact:getNormal())
-        elseif (fixtureA:getUserData().tag == "enemy" and fixtureB:getUserData().tag == "enemy") then
-            fixtureB:getUserData().collisionnormal = vector2.new(contact:getNormal())
-
-            --[[ Enemy contact with amonites
+            -- Enemy contact with amonites
         elseif (fixtureA:getUserData().tag == "enemy" and fixtureB:getUserData().tag == "amonite") then
             fixtureA:getUserData().collisionnormal = vector2.new(contact:getNormal())
         elseif (fixtureA:getUserData().tag == "amonite" and fixtureB:getUserData().tag == "enemy") then
             fixtureB:getUserData().collisionnormal = vector2.new(contact:getNormal())
-        end]]
-        
-       
+
+              -- Enemy contact with bullets
+        elseif (fixtureA:getUserData().tag == "enemy" and fixtureB:getUserData().tag == "bullets") or 
+        (fixtureA:getUserData().tag == "bullets" and fixtureB:getUserData().tag == "enemy") then
+            function DeadEnemies(enemies)
+                love.graphics.setColor(0.50196,0,0)
+                enemies[i].body:setLinearVelocity(0,0)
+            end
+        end
     end
-end
-
-
-function DrawEnemies(enemies)
-    for i = 1, #enemies, 1 do
-        if enemies[i].type == 1 then
+    
+    function DrawEnemies(enemies)
+        for i = 1, #enemies, 1 do
+            if enemies[i].type == 1 then
             love.graphics.setColor(0, 0, 1)
 
         elseif enemies[i].type == 2 then
@@ -78,5 +80,4 @@ function DrawEnemies(enemies)
         end
         love.graphics.polygon("fill", enemies[i].body:getWorldPoints(enemies[i].shape:getPoints()))
     end
-end
 end
